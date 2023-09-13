@@ -99,7 +99,7 @@ docker run --gpus all --ipc=host --ulimit memlock=-1 -v `pwd`/models:/llama_data
 For **the minimum memory** requirements (7B almost 7.12GB) docker images, use the following command:
 
 ```bash
-docker run --gpus all --ipc=host --ulimit memlock=-1 -v `pwd`/models:/app/models -p 7860:7860 -it --rm soulteary/llama:int8
+docker run --gpus all --ipc=host --ulimit memlock=-1 -e PORT=7860 -v `pwd`/models:/app/models -p 7860:7860 -it --rm soulteary/llama:int8
 ```
 
 **For fine-tune**, [read this documentation](https://soulteary.com/2023/03/25/model-finetuning-on-llama-65b-large-model-using-docker-and-alpaca-lora.html).

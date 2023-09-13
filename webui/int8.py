@@ -7,6 +7,8 @@ import json
 from pathlib import Path
 import gradio as gr
 
+from api import app_env, get_args, app
+
 os.environ["BITSANDBYTES_NOWELCOME"] = "1"
 
 def load(
@@ -99,36 +101,27 @@ def process(prompt: str):
     print("Generated:\n", results[0])
     return str(results[0])
 
+args = get_args()
+ckpt_dir = args["ckpt_dir"]
+tokenizer_path = args["tokenizer_path"]
+temperature: float = 0.8
+top_p: float = 0.95
+max_seq_len: int = 512
+max_batch_size: int = 1
+use_int8: bool = True
+repetition_penalty_range: int = 1024
+repetition_penalty_slope: float = 0
+repetition_penalty: float = 1.15
 
-def get_args():
-    import argparse
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--ckpt_dir", type=str, default="./models/7B")
-    parser.add_argument("--tokenizer_path", type=str,
-                        default="./models/tokenizer.model")
-    return parser.parse_args()
+generator = load(ckpt_dir, tokenizer_path,
+                    max_seq_len, max_batch_size, use_int8)
 
+demo = gr.Interface(
+    fn=process,
+    inputs=gr.Textbox(lines=10, placeholder="Your prompt here..."),
+    outputs="text",
+)
 
-if __name__ == '__main__':
-    args = get_args()
-    ckpt_dir = args.ckpt_dir
-    tokenizer_path = args.tokenizer_path
-    temperature: float = 0.8
-    top_p: float = 0.95
-    max_seq_len: int = 512
-    max_batch_size: int = 1
-    use_int8: bool = True
-    repetition_penalty_range: int = 1024
-    repetition_penalty_slope: float = 0
-    repetition_penalty: float = 1.15
-
-    generator = load(ckpt_dir, tokenizer_path,
-                     max_seq_len, max_batch_size, use_int8)
-
-    demo = gr.Interface(
-        fn=process,
-        inputs=gr.Textbox(lines=10, placeholder="Your prompt here..."),
-        outputs="text",
-    )
-
-    demo.launch(server_name="0.0.0.0")
+# demo.launch(server_name="0.0.0.0")
+app_env["generator"] = generator
+app = gr.mount_gradio_app(app_env["app"], demo, path="/")
